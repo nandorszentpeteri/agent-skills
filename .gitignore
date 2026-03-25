@@ -1,0 +1,13 @@
+# Claude Code
+.claude/settings.local.json
+.claude/todos/
+.claude/projects/
+
+# Cursor
+.cursorindexingignore
+
+# Codex
+.codex/
+
+# General
+*.local

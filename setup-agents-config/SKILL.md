@@ -40,10 +40,15 @@ repo-root/
 ├── AGENTS.md              # Single source of truth (all tools)
 ├── CLAUDE.md              # References @AGENTS.md (Claude Code only)
 ├── .agents/               # Configuration directory
-└── .claude -> .agents/    # Symlink for Claude Code compatibility
+│   ├── skills/
+│   └── agents/
+└── .claude/               # Real directory (Claude Code owns it)
+    ├── settings.local.json  # Claude Code-specific config (preserved)
+    ├── skills -> ../.agents/skills/   # Symlink
+    └── agents -> ../.agents/agents/   # Symlink
 ```
 
-**Why the symlink?** Claude Code looks for `.claude/`. Symlinking `.agents` to `.claude` lets you maintain one directory that works for all tools.
+**Why symlink subdirectories instead of the whole folder?** Claude Code stores its own files (like `settings.local.json`) in `.claude/`. Symlinking the entire `.agents` to `.claude` would either destroy those files or pollute `.agents/` with Claude-specific config. Symlinking only the `skills/` and `agents/` subdirectories keeps both tools happy.
 
 ### Check Existing Setup
 
@@ -53,14 +58,40 @@ Before creating files, check what already exists:
 # Check for existing config files
 ls -la AGENTS.md CLAUDE.md .agents .claude 2>/dev/null
 
-# Verify .claude symlink points to .agents
-readlink .claude
+# Detect old whole-folder symlink vs real directory
+if [ -L .claude ]; then
+  echo "WARNING: .claude is a symlink (old approach) — needs migration"
+  readlink .claude
+elif [ -d .claude ]; then
+  echo ".claude is a real directory (correct)"
+  readlink .claude/skills .claude/agents 2>/dev/null
+fi
 
 # Check CLAUDE.md content
 cat CLAUDE.md 2>/dev/null
 ```
 
 Report missing or misconfigured items to the user before proceeding.
+
+**Migrating from old whole-folder symlink:** If `.claude` is a symlink to `.agents`, migrate to subdirectory symlinks:
+
+```bash
+# 1. Save any Claude-specific files from the symlinked directory
+cp .claude/settings.local.json /tmp/claude-settings-backup.json 2>/dev/null
+
+# 2. Remove the old symlink
+rm .claude
+
+# 3. Create .claude as a real directory
+mkdir -p .claude
+
+# 4. Restore Claude-specific files
+cp /tmp/claude-settings-backup.json .claude/settings.local.json 2>/dev/null
+
+# 5. Create subdirectory symlinks
+ln -sf ../.agents/skills .claude/skills
+ln -sf ../.agents/agents .claude/agents
+```
 
 ### Setup Commands
 
@@ -73,11 +104,15 @@ touch AGENTS.md
 # 2. Create CLAUDE.md referencing AGENTS.md
 echo "@AGENTS.md" > CLAUDE.md
 
-# 3. Create .agents directory
-mkdir -p .agents
+# 3. Create .agents directory with subdirectories
+mkdir -p .agents/skills .agents/agents
 
-# 4. Create symlink for Claude Code
-ln -sf .agents .claude
+# 4. Create .claude directory (preserves existing Claude Code config)
+mkdir -p .claude
+
+# 5. Symlink subdirectories into .claude
+ln -sf ../.agents/skills .claude/skills
+ln -sf ../.agents/agents .claude/agents
 ```
 
 ### Verification
@@ -85,9 +120,10 @@ ln -sf .agents .claude
 After setup, verify the structure:
 
 ```bash
-ls -la AGENTS.md CLAUDE.md .agents/ .claude
-cat CLAUDE.md  # Should show: @AGENTS.md
-readlink .claude  # Should show: .agents
+ls -la AGENTS.md CLAUDE.md .agents/ .claude/
+cat CLAUDE.md          # Should show: @AGENTS.md
+readlink .claude/skills  # Should show: ../.agents/skills
+readlink .claude/agents  # Should show: ../.agents/agents
 ```
 
 ## Global Setup
@@ -174,9 +210,10 @@ readlink ~/.claude/skills/<skill-name>
 ## Troubleshooting
 
 **Claude Code not finding instructions:**
-- Verify `.claude` symlink exists: `ls -la .claude`
+- Verify `.claude/` is a real directory (not a symlink): `test -L .claude && echo "symlink (needs migration)" || echo "real dir (correct)"`
 - Check `CLAUDE.md` contains `@AGENTS.md`
-- Verify symlink target: `readlink .claude` should show `.agents`
+- Verify subdirectory symlinks: `readlink .claude/skills .claude/agents`
+- If `.claude` is a symlink to `.agents`, migrate to subdirectory symlinks (see "Migrating from old whole-folder symlink" above)
 
 **Codex not loading instructions:**
 - Check `AGENTS.md` exists at repo root
@@ -185,3 +222,8 @@ readlink ~/.claude/skills/<skill-name>
 **Other tools not reading config:**
 - Verify `AGENTS.md` exists at repo root
 - Check `.agents/` directory exists
+
+**Global symlinks not working:**
+- Check symlink target exists: `ls -la ~/.agents/skills/<skill-name>`
+- Verify symlink resolves: `readlink ~/.claude/skills/<skill-name>`
+- Ensure central directory was created: `ls ~/.agents/`
