@@ -38,7 +38,7 @@ You don't need tool-specific folders like `.github/copilot-instructions.md`, `.c
 ```
 repo-root/
 ├── AGENTS.md              # Single source of truth (all tools)
-├── CLAUDE.md              # References @AGENTS.md (Claude Code only)
+├── CLAUDE.md -> AGENTS.md # Symlink (Claude Code only)
 ├── .agents/               # Configuration directory
 │   ├── skills/
 │   └── agents/
@@ -48,7 +48,9 @@ repo-root/
     └── agents -> ../.agents/agents/   # Symlink
 ```
 
-**Why symlink subdirectories instead of the whole folder?** Claude Code stores its own files (like `settings.local.json`) in `.claude/`. Symlinking the entire `.agents` to `.claude` would either destroy those files or pollute `.agents/` with Claude-specific config. Symlinking only the `skills/` and `agents/` subdirectories keeps both tools happy.
+**Why symlink `CLAUDE.md` instead of using `@AGENTS.md` content?** A symlink is simpler — one file instead of a file containing an import directive. Claude-specific additions (rules, tool config) go in `.claude/rules/` which Claude Code loads automatically.
+
+**Why symlink subdirectories instead of the whole `.claude/` folder?** Claude Code stores its own files (like `settings.local.json`) in `.claude/`. Symlinking the entire `.agents` to `.claude` would either destroy those files or pollute `.agents/` with Claude-specific config. Symlinking only the `skills/` and `agents/` subdirectories keeps both tools happy.
 
 ### Check Existing Setup
 
@@ -67,11 +69,23 @@ elif [ -d .claude ]; then
   readlink .claude/skills .claude/agents 2>/dev/null
 fi
 
-# Check CLAUDE.md content
-cat CLAUDE.md 2>/dev/null
+# Check CLAUDE.md — should be a symlink to AGENTS.md
+if [ -L CLAUDE.md ]; then
+  echo "CLAUDE.md is a symlink to: $(readlink CLAUDE.md)"
+elif [ -f CLAUDE.md ]; then
+  echo "CLAUDE.md is a regular file (should be symlink to AGENTS.md)"
+  cat CLAUDE.md
+fi
 ```
 
 Report missing or misconfigured items to the user before proceeding.
+
+**Migrating from old `@AGENTS.md` content approach:** If `CLAUDE.md` is a regular file containing `@AGENTS.md`, replace it with a symlink:
+
+```bash
+rm CLAUDE.md
+ln -sf AGENTS.md CLAUDE.md
+```
 
 **Migrating from old whole-folder symlink:** If `.claude` is a symlink to `.agents`, migrate to subdirectory symlinks:
 
@@ -101,8 +115,8 @@ Run these commands in the repository root:
 # 1. Create AGENTS.md (user adds project-specific instructions)
 touch AGENTS.md
 
-# 2. Create CLAUDE.md referencing AGENTS.md
-echo "@AGENTS.md" > CLAUDE.md
+# 2. Symlink CLAUDE.md to AGENTS.md (Claude Code reads this)
+ln -sf AGENTS.md CLAUDE.md
 
 # 3. Create .agents directory with subdirectories
 mkdir -p .agents/skills .agents/agents
@@ -121,7 +135,7 @@ After setup, verify the structure:
 
 ```bash
 ls -la AGENTS.md CLAUDE.md .agents/ .claude/
-cat CLAUDE.md          # Should show: @AGENTS.md
+readlink CLAUDE.md       # Should show: AGENTS.md
 readlink .claude/skills  # Should show: ../.agents/skills
 readlink .claude/agents  # Should show: ../.agents/agents
 ```
@@ -134,6 +148,7 @@ Global setup lets you share skills and agents across all projects by keeping the
 
 ```
 ~/.agents/
+├── AGENTS.md              # Global shared rules (single source of truth)
 ├── skills/
 │   └── <skill-name>/
 │       └── SKILL.md
@@ -142,13 +157,49 @@ Global setup lets you share skills and agents across all projects by keeping the
         └── ...
 ```
 
+Each tool's global directory gets a symlink to `~/.agents/AGENTS.md`:
+
+```
+~/.claude/
+├── CLAUDE.md -> ~/.agents/AGENTS.md   # Symlink
+├── rules/                              # Claude-specific rules (optional)
+├── skills/                             # Skill symlinks
+└── agents/                             # Agent symlinks
+
+~/.cursor/
+├── AGENTS.md -> ~/.agents/AGENTS.md   # Symlink
+├── skills/
+└── agents/
+
+~/.codex/
+├── AGENTS.md -> ~/.agents/AGENTS.md   # Symlink
+├── skills/
+└── agents/
+
+~/.config/opencode/
+├── AGENTS.md -> ~/.agents/AGENTS.md   # Symlink
+├── skills/
+└── agents/
+```
+
 ### Check Existing Setup
 
 ```bash
-# Check if central directory exists
-ls -la ~/.agents/skills ~/.agents/agents 2>/dev/null
+# Check if central directory and AGENTS.md exist
+ls -la ~/.agents/AGENTS.md ~/.agents/skills ~/.agents/agents 2>/dev/null
 
-# Check tool-specific global dirs
+# Check tool-specific global AGENTS.md symlinks
+for f in ~/.claude/CLAUDE.md ~/.cursor/AGENTS.md ~/.codex/AGENTS.md ~/.config/opencode/AGENTS.md; do
+  if [ -L "$f" ]; then
+    echo "$f -> $(readlink "$f")"
+  elif [ -f "$f" ]; then
+    echo "$f exists but is not a symlink (should be migrated)"
+  else
+    echo "$f missing"
+  fi
+done
+
+# Check tool-specific skills/agents dirs
 ls -la ~/.claude/skills ~/.cursor/skills ~/.codex/skills ~/.config/opencode/skills 2>/dev/null
 ```
 
@@ -157,19 +208,31 @@ Report what already exists to the user before proceeding.
 ### Setup Commands
 
 ```bash
-# 1. Create central directories
+# 1. Create central directories and AGENTS.md
 mkdir -p ~/.agents/skills ~/.agents/agents
+touch ~/.agents/AGENTS.md
 
 # 2. Copy or clone skills/agents into ~/.agents/
 #    (method left to user — git clone, manual copy, etc.)
 
-# 3. Create tool-specific parent dirs
+# 3. Symlink AGENTS.md into each tool's global config
+#    Claude Code uses CLAUDE.md filename (symlinked to same file)
+mkdir -p ~/.claude
+ln -sf ~/.agents/AGENTS.md ~/.claude/CLAUDE.md
+mkdir -p ~/.cursor
+ln -sf ~/.agents/AGENTS.md ~/.cursor/AGENTS.md
+mkdir -p ~/.codex
+ln -sf ~/.agents/AGENTS.md ~/.codex/AGENTS.md
+mkdir -p ~/.config/opencode
+ln -sf ~/.agents/AGENTS.md ~/.config/opencode/AGENTS.md
+
+# 4. Create tool-specific skills/agents parent dirs
 mkdir -p ~/.claude/skills ~/.claude/agents
 mkdir -p ~/.cursor/skills ~/.cursor/agents
 mkdir -p ~/.codex/skills ~/.codex/agents
 mkdir -p ~/.config/opencode/skills ~/.config/opencode/agents
 
-# 4. Symlink individual items into each tool
+# 5. Symlink individual items into each tool
 ln -sf ~/.agents/skills/<skill-name> ~/.claude/skills/<skill-name>
 ln -sf ~/.agents/skills/<skill-name> ~/.cursor/skills/<skill-name>
 ln -sf ~/.agents/skills/<skill-name> ~/.codex/skills/<skill-name>
@@ -183,13 +246,21 @@ ln -sf ~/.agents/agents/<agent-name> ~/.config/opencode/agents/<agent-name>
 
 **Key points:**
 - GitHub Copilot is skipped (no global config directory)
+- Claude Code uses `CLAUDE.md` as filename but points to the same `~/.agents/AGENTS.md`
+- Claude-specific global rules go in `~/.claude/rules/` (not in AGENTS.md)
 - If the user doesn't specify which skills/agents to install, list available ones under `~/.agents/` and ask
 - Existing tool configs are never overwritten — we only add into `skills/` and `agents/` subdirs
 
 ### Global Verification
 
 ```bash
-# Verify symlinks resolve correctly
+# Verify AGENTS.md symlinks
+readlink ~/.claude/CLAUDE.md         # Should show: ~/.agents/AGENTS.md
+readlink ~/.cursor/AGENTS.md         # Should show: ~/.agents/AGENTS.md
+readlink ~/.codex/AGENTS.md          # Should show: ~/.agents/AGENTS.md
+readlink ~/.config/opencode/AGENTS.md # Should show: ~/.agents/AGENTS.md
+
+# Verify skills/agents symlinks resolve correctly
 ls -la ~/.claude/skills/ ~/.cursor/skills/ ~/.codex/skills/ ~/.config/opencode/skills/
 
 # Check a specific symlink target
@@ -198,6 +269,11 @@ readlink ~/.claude/skills/<skill-name>
 ```
 
 ### Global Troubleshooting
+
+**AGENTS.md not picked up by a tool:**
+- Check the symlink exists and resolves: `readlink ~/.cursor/AGENTS.md`
+- Verify the central file exists: `ls -la ~/.agents/AGENTS.md`
+- For Claude Code, verify the filename is `CLAUDE.md`: `readlink ~/.claude/CLAUDE.md`
 
 **Symlink broken (skill not found by tool):**
 - Check the target exists: `ls -la ~/.agents/skills/<skill-name>`
@@ -210,8 +286,9 @@ readlink ~/.claude/skills/<skill-name>
 ## Troubleshooting
 
 **Claude Code not finding instructions:**
+- Verify `CLAUDE.md` is a symlink to `AGENTS.md`: `readlink CLAUDE.md`
+- If it's a regular file with `@AGENTS.md` content, migrate to symlink (see migration section above)
 - Verify `.claude/` is a real directory (not a symlink): `test -L .claude && echo "symlink (needs migration)" || echo "real dir (correct)"`
-- Check `CLAUDE.md` contains `@AGENTS.md`
 - Verify subdirectory symlinks: `readlink .claude/skills .claude/agents`
 - If `.claude` is a symlink to `.agents`, migrate to subdirectory symlinks (see "Migrating from old whole-folder symlink" above)
 
