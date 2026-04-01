@@ -20,6 +20,21 @@ import { formatLeaves } from 'modules/leaves';
 import { AppLeaf } from 'types/common/leaf';
 ```
 
+## Named Exports Only
+
+Always use named exports. Avoid default exports — they make refactoring harder, lose the canonical name, and produce inconsistent imports across the codebase.
+
+```typescript
+// Do
+export const UserCard = ({ name }: UserCardProps) => <div>{name}</div>;
+export const formatUser = (user: User) => `${user.name} <${user.email}>`;
+
+// Don't
+export default function UserCard({ name }: UserCardProps) {
+  return <div>{name}</div>;
+}
+```
+
 ## Clean Types
 
 Enforce immutability through patterns, not type annotations. Do not use `readonly` — keep type definitions clean and minimal.
