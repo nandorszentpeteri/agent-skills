@@ -162,9 +162,7 @@ readlink .claude/agents/<agent-name>   # Should show: ../.agents/agents/<agent-n
 
 ## Global Setup
 
-Global setup lets you share skills and agents across all projects by keeping them in a central `~/.agents/` directory and symlinking into each tool's global config.
-
-**Scope (this repo):** these steps cover **Claude Code, Cursor, Codex, and OpenCode** only. They omit **Rokucode** (`~/.config/rokucode/`). If you use Rokucode globally, copy the `~/.config/rokucode/` steps from the fuller `setup-agents-config` in `gitlab.eng.roku.com:nszentpeteri/agent-skills`, or add the same `mkdir` / `ln` / `mirror_hub_kind` entries for `~/.config/rokucode/` yourself.
+Global setup lets you share skills and agents across all projects by keeping them in a central `~/.agents/` directory and symlinking into each tool's global config. The steps below target **Claude Code, Cursor, Codex, and OpenCode**.
 
 ### Global Directory Structure
 
