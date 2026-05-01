@@ -1,8 +1,8 @@
 ---
 name: setup-agents-config
 description: >-
-  Set up AI agent configuration for repositories or globally: AGENTS.md hub,
-  whole-folder symlinks at project level, per-item symlinks at global level.
+  Set up AI agent configuration for repositories or globally: AGENTS.md as single
+  source of truth, whole-folder symlinks at project level, per-item symlinks at global level.
   Includes verification and migration from older layouts.
   Only invoke when the user explicitly asks to set up agents config, configure
   AGENTS.md, initialize AI harnesses, or install skills/agents globally. Do NOT
@@ -15,7 +15,7 @@ This skill sets up AI agent configuration at **project level** or **globally**. 
 
 Ask the user which scope they need (project or global), or infer it from their request.
 
-**Note:** This guide is for Linux and macOS. Windows paths may differ.
+**Note:** This guide is for Linux and macOS. On Windows, use WSL — native Windows paths are not covered.
 
 ## Core Concept
 
@@ -121,9 +121,14 @@ ln -sf ../.agents/agents .claude/agents
 **From per-item symlinks:** If `.claude/skills/` is a real directory full of individual symlinks:
 
 ```bash
-rm -rf .claude/skills .claude/agents
-ln -sf ../.agents/skills .claude/skills
-ln -sf ../.agents/agents .claude/agents
+# Verify these are directories of symlinks, not real files with content
+if find .claude/skills -maxdepth 1 -not -type l -not -type d | grep -q .; then
+  echo "WARNING: .claude/skills contains non-symlink files — back up before removing"
+else
+  rm -rf .claude/skills .claude/agents
+  ln -sf ../.agents/skills .claude/skills
+  ln -sf ../.agents/agents .claude/agents
+fi
 ```
 
 ### Setup Commands
@@ -131,8 +136,9 @@ ln -sf ../.agents/agents .claude/agents
 Run these commands in the repository root:
 
 ```bash
-# 1. Create AGENTS.md (user adds project-specific instructions)
-touch AGENTS.md
+# 1. Create AGENTS.md if it doesn't exist
+#    (tell the user it needs project-specific instructions — an empty file is a no-op)
+test -f AGENTS.md || touch AGENTS.md
 
 # 2. Symlink CLAUDE.md to AGENTS.md (Claude Code reads this)
 ln -sf AGENTS.md CLAUDE.md
@@ -270,6 +276,12 @@ mirror_hub_kind() {
 }
 mirror_hub_kind skills
 mirror_hub_kind agents
+
+# If nothing was mirrored, inform the user
+if [ -z "$(find "$AG/skills" -mindepth 1 -maxdepth 1 2>/dev/null)" ] && \
+   [ -z "$(find "$AG/agents" -mindepth 1 -maxdepth 1 2>/dev/null)" ]; then
+  echo "No skills or agents found in ~/.agents/ — add them first, then re-run the mirror step."
+fi
 ```
 
 To add **one** new skill or agent later, link it into the hub first, then re-run step **5** (or run `mirror_hub_kind skills` / `mirror_hub_kind agents` only).
@@ -280,7 +292,7 @@ To add **one** new skill or agent later, link it into the hub first, then re-run
 - **Per-item symlinks at global level** preserve any tool-managed skills in those directories
 - Claude-specific global rules go in `~/.claude/rules/` (not in AGENTS.md)
 - If the user doesn't specify which skills/agents to install, list available ones under `~/.agents/` and ask
-- Existing tool configs are never overwritten — we only add or refresh symlinks
+- Existing non-symlink files are never overwritten — existing symlinks are refreshed by `ln -sf`
 
 ### Global Verification
 
@@ -293,8 +305,8 @@ readlink ~/.config/opencode/AGENTS.md  # Should show: ~/.agents/AGENTS.md
 
 # Verify skills/agents per-item symlinks resolve correctly
 ls -la ~/.claude/skills/ ~/.cursor/skills/
-readlink ~/.claude/skills/<skill-name>
-# Should show: ~/.agents/skills/<skill-name> (or the expanded absolute path)
+# Check all symlinks resolve:
+find ~/.claude/skills -maxdepth 1 -type l -exec sh -c 'echo "{} -> $(readlink "{}")"' \;
 ```
 
 ### Global Troubleshooting
