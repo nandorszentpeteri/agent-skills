@@ -1,13 +1,10 @@
 ---
 name: nandors-coding-style
 description: >-
-  Apply Nandor's functional coding style when writing, reviewing, or refactoring
-  code.
-
-  TRIGGER proactively whenever: writing new code, modifying existing code,
-  reviewing code, refactoring, generating examples, or answering coding
-  questions. This skill should be loaded automatically — do NOT wait for the
-  user to invoke it.
+  Functional coding conventions: factory functions over classes, immutability,
+  pure functions, currying, arrow functions, one-liners. Load proactively
+  whenever writing, modifying, reviewing, or refactoring code — applies to every
+  code change automatically.
 ---
 
 # Nandor's Coding Style
@@ -126,7 +123,7 @@ const prop = (key) => (obj) => obj[key];
 
 ### Import Separation
 
-Group 3rd-party/global imports first, then a blank line, then local/project imports. Within each group, keep imports in **alphabetical order**.
+Group 3rd-party/global imports first, then a blank line, then local/project imports. Within each group, keep imports in **alphabetical order** unless a language addendum overrides grouping (see **React import order** in `typescript.md`: **context → hooks → rest** within the local block comes first; **then** alphabetical order **within** each of those subgroups).
 
 ```javascript
 import dayjs from 'dayjs';

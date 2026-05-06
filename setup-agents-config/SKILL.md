@@ -1,12 +1,10 @@
 ---
 name: setup-agents-config
 description: >-
-  Set up AI agent configuration for repositories or globally: AGENTS.md as single
-  source of truth, whole-folder symlinks at project level, per-item symlinks at global level.
-  Includes verification and migration from older layouts.
-  Only invoke when the user explicitly asks to set up agents config, configure
-  AGENTS.md, initialize AI harnesses, or install skills/agents globally. Do NOT
-  use proactively.
+  Set up AI agent configuration (project or global): AGENTS.md as source of
+  truth, symlinks for Claude/Cursor/Codex/OpenCode, migration from older
+  layouts. Only invoke when explicitly asked to set up agents config or install
+  skills globally.
 ---
 
 # Setting Up AI Agent Configuration
