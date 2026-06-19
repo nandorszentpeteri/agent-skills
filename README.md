@@ -10,8 +10,10 @@ Skills are markdown-based instruction sets that teach AI coding assistants how t
 
 | Skill | Description |
 |-------|-------------|
+| [nandors-coding-style](nandors-coding-style/) | Functional coding conventions — factory functions over classes, immutability, pure functions, currying |
 | [setup-agents-config](setup-agents-config/) | Set up AI agent configuration for multi-tool support |
 | [setup-mcp](setup-mcp/) | Add MCP servers to any AI coding tool — knows the correct path, format, and schema for each harness |
+| [write-ticket](write-ticket/) | Write, draft, or extend tickets/issues in Nandor's style for any tracker — Bug, Task, Story, and Investigation types, then file on approval |
 
 ## Global Config Locations
 

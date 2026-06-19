@@ -1,0 +1,60 @@
+{
+  "skill_name": "nandors-coding-style",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Write a TypeScript utility module that groups an array of users by their department. Each user has a name, email, and department field. Export the function.",
+      "expected_output": "A TypeScript module using arrow functions, no classes, named export, type alias (not interface) for the User type, immutable operations (reduce/groupBy pattern without mutation), and no default export.",
+      "files": [],
+      "expectations": [
+        "Uses arrow function syntax, not a function declaration",
+        "No class, constructor, new, or this keyword",
+        "Uses a named export (export const), not a default export",
+        "User type is defined with 'type', not 'interface' (it's not component props)",
+        "The grouping logic does not mutate its input array or accumulator directly — uses spread or equivalent immutable pattern",
+        "Type definition appears before its first usage in the file"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Write a React component called StatusBadge that accepts a status prop ('active' | 'inactive' | 'pending') and renders a MUI Chip with different colors per status. It needs some local state to track whether the badge has been clicked.",
+      "expected_output": "A React component using arrow function syntax, interface for props, named export, destructured useState import, inline sx prop on the Chip, and correct import ordering (3rd-party then local, with context/hooks/rest order within local).",
+      "files": [],
+      "expectations": [
+        "Component is defined as an arrow function, not a function declaration",
+        "Props use 'interface StatusBadgeProps', not 'type StatusBadgeProps'",
+        "Uses named export: 'export const StatusBadge'",
+        "useState is imported as a named import from 'react', not accessed via React.useState",
+        "No default export present",
+        "MUI sx prop is inline on the component, not extracted into a variable"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "I have this code, please fix the style issues:\n\n```typescript\nimport { formatUser } from './utils/format';\nimport React from 'react';\nimport { Box } from '@mui/material';\nimport { useAuth } from './hooks/useAuth';\nimport { AuthContext } from './context/auth';\n\ntype UserCardProps = {\n  name: string;\n  email: string;\n};\n\nconst userCardStyles = { padding: 2, display: 'flex' };\n\nexport default function UserCard({ name, email }: UserCardProps) {\n  const auth = React.useContext(AuthContext);\n  const { user } = useAuth();\n\n  return (\n    <Box sx={userCardStyles}>\n      {name}\n    </Box>\n  );\n}\n```",
+      "expected_output": "Fixed code with: import order corrected (3rd-party first, then local in context→hooks→rest order), React.useContext replaced with destructured useContext import, default export replaced with named export, function declaration replaced with arrow function, type replaced with interface for props, sx prop inlined.",
+      "files": [],
+      "expectations": [
+        "Import order is fixed: @mui/material and react first, then local imports grouped as context → hooks → rest",
+        "React.useContext is replaced with destructured useContext from 'react'",
+        "Default export is replaced with a named export",
+        "Function declaration is replaced with an arrow function",
+        "Props use 'interface UserCardProps' instead of 'type UserCardProps'",
+        "sx prop is inlined instead of referencing the userCardStyles variable"
+      ]
+    },
+    {
+      "id": 4,
+      "prompt": "Write a curried logger utility in TypeScript that takes a module name and returns a function that takes a log level, and returns a function that takes a message and logs it as '[module][level] message'. Add a unit test file for it.",
+      "expected_output": "A curried arrow function chain with no classes, pure functions, one-liner style where possible. Test file uses the filename as the top-level describe block, with one atomic it() per behavior.",
+      "files": [],
+      "expectations": [
+        "Logger is implemented as a curried arrow function (function returning function returning function)",
+        "No class, constructor, new, or this anywhere",
+        "Test file has a top-level describe block named after the file/function",
+        "Each it() block tests exactly one behavior",
+        "Named export used for the logger function"
+      ]
+    }
+  ]
+}

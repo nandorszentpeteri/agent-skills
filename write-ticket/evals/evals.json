@@ -1,0 +1,56 @@
+{
+  "skill_name": "write-ticket",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Can you write a ticket for the bug where the search input doesn't clear when you navigate away from the page and come back?",
+      "expected_output": "A Bug ticket with a terse component:symptom summary, Steps to reproduce, Expected, Actual, and Notes sections.",
+      "files": [],
+      "expectations": [
+        "Summary follows the 'Component: symptom' pattern and is concise",
+        "Ticket has ### Steps to reproduce section with numbered steps",
+        "Ticket has ### Expected section",
+        "Ticket has ### Actual section",
+        "Ticket does NOT contain a ## Why section (that's for Tasks/Stories, not Bugs)"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "Write a ticket for adding rate limiting to the public API endpoints. We need it to prevent abuse, not sure exactly how yet.",
+      "expected_output": "A Task ticket with a verb-led summary, Acceptance Criteria (clear requirements, not necessarily checkboxes), a Why section explaining abuse prevention, and optionally a How/Implementation section.",
+      "files": [],
+      "expectations": [
+        "Summary starts with an action verb",
+        "Ticket has ## Acceptance Criteria section with unambiguous requirements",
+        "Ticket has ## Why section explaining the motivation (abuse prevention)",
+        "Acceptance criteria are clear and testable, not vague"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Make a ticket for investigating whether we should switch from polling to WebSockets for live status updates.",
+      "expected_output": "An Investigation ticket with summary prefixed 'INVESTIGATE - ', brief scope description, and what a good output looks like.",
+      "files": [],
+      "expectations": [
+        "Summary is prefixed with 'INVESTIGATE - '",
+        "Ticket body describes the question to answer",
+        "Ticket mentions what a successful investigation output looks like (decision, follow-up ticket, doc, etc.)"
+      ]
+    }
+    ,
+    {
+      "id": 4,
+      "prompt": "Write a task ticket for migrating our session storage from Redis to DynamoDB. Here's what I found during investigation:\n\n- Redis is currently used for 3 things: session tokens, rate limit counters, and feature flag overrides\n- DynamoDB would give us better multi-region support and removes the Redis dependency\n- Session tokens need TTL support (DynamoDB has native TTL)\n- Rate limit counters need atomic increments — DynamoDB supports this via UpdateItem with ADD\n- Feature flag overrides are low-volume key-value, trivial to migrate\n- Estimated data size: ~50k active sessions at peak\n- We'd need to update 4 services: auth, api-gateway, admin-console, session-service\n- Rollback plan: keep Redis running in parallel for 2 weeks post-migration, use a feature flag to switch traffic",
+      "expected_output": "A Task ticket that distils the investigation notes into clean sections: a verb-led summary, Acceptance Criteria that cover all three use cases (sessions, rate limits, feature flags), a Why section on multi-region + removing Redis dep, and a How/Implementation section that preserves the key technical detail (TTL, atomic increments, 4 services, rollback plan).",
+      "files": [],
+      "expectations": [
+        "Summary starts with an action verb and mentions the migration clearly",
+        "Ticket has ## Acceptance Criteria covering session tokens, rate limit counters, and feature flag overrides",
+        "Ticket has ## Why section mentioning multi-region support or removing the Redis dependency",
+        "Ticket has ## How / Implementation section that includes the 4 affected services",
+        "Rollback plan is mentioned in the ticket",
+        "Technical details (TTL, atomic increments) appear in the ticket, not discarded"
+      ]
+    }
+  ]
+}

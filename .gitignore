@@ -11,3 +11,6 @@
 
 # General
 *.local
+
+# Skill eval workspaces (throwaway test output)
+*-workspace/
