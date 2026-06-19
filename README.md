@@ -10,6 +10,7 @@ Skills are markdown-based instruction sets that teach AI coding assistants how t
 
 | Skill | Description |
 |-------|-------------|
+| [git-worktree](git-worktree/) | Manage git worktrees for ticket-based development with automatic naming and lifecycle |
 | [nandors-coding-style](nandors-coding-style/) | Functional coding conventions — factory functions over classes, immutability, pure functions, currying |
 | [setup-agents-config](setup-agents-config/) | Set up AI agent configuration for multi-tool support |
 | [setup-mcp](setup-mcp/) | Add MCP servers to any AI coding tool — knows the correct path, format, and schema for each harness |
