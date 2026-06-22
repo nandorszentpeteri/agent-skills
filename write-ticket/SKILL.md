@@ -15,6 +15,23 @@ Write tickets in Nandor's style. The goal is a ticket that is immediately
 actionable: clear scope, unambiguous acceptance criteria, and an explicit
 justification for the work.
 
+## Core principle: keep it concise
+
+A ticket states **what** needs to be true and **why** — not a step-by-step plan
+for how to build it. Keep every ticket as short as it can be while still being
+unambiguous. Resist the urge to overload it with implementation walkthroughs;
+the detailed how belongs in the code and the MR, not the ticket.
+
+- **Acceptance Criteria are requirements, not a spec.** Each line describes an
+  observable outcome someone can verify — not the technical approach, file names,
+  function signatures, or library choices used to get there.
+- **Useful technical pointers are welcome — as pointers, not plans.** A relevant
+  file, service, API, constraint, or known gotcha that orients the implementer
+  is valuable; a full implementation walkthrough is not. Drop the breadcrumb,
+  then trust whoever picks it up to decide the how.
+- **Default short.** When in doubt, cut. A tight ticket with five sharp AC lines
+  plus a couple of orienting pointers beats a long one padded with a plan.
+
 ## Drafting vs. filing
 
 **Default to drafting.** When asked to "write" or "create" a ticket, produce the
@@ -105,26 +122,26 @@ Reference a screenshot when the bug is visual.
 ```markdown
 ## Acceptance Criteria
 
-Clear, unambiguous requirements. Format them however makes the requirement most
-readable — bullet list, numbered list, or prose paragraphs are all fine. The
-point is that someone reading it can tell without ambiguity when the work is
-done. Avoid vague phrases like "it should work" or "handle the case".
+The requirements — **what** must be true for the work to be done, stated as
+observable outcomes. Each line should have a clear pass/fail condition someone
+can verify without reading the code. Keep it to the requirements only: no
+implementation steps, file paths, or technical detail about how to achieve them.
+Format however reads best (bullets, numbered list, or prose). Avoid vague
+phrases like "it should work" or "handle the case".
 
 ## Why
 
 The motivation. Why does this work need to happen? What problem does it solve,
 what risk does it mitigate, or what constraint does it satisfy? This section
 must always be present — a ticket without a why is a ticket that will be
-deprioritised or misunderstood.
+deprioritised or misunderstood. Keep it to a few sentences.
 
-## How / Implementation  *(include when the approach is non-obvious)*
+## How / Implementation  *(optional — include only when it helps)*
 
-Numbered steps, code blocks, YAML examples, config snippets. Add a table for
-scope or effort breakdown when there are multiple moving parts.
-
-| Item | Effort |
-|------|--------|
-| ...  | Small  |
+Most tickets don't need this. Add it to leave useful technical pointers: a
+relevant file or service, an API to use, a constraint to respect, or a known
+gotcha to avoid. Keep these as breadcrumbs that orient the implementer — not a
+full implementation plan. Leave the detailed how to the implementer and the MR.
 
 ## Related  *(include when cross-links exist)*
 
@@ -204,10 +221,9 @@ new repos adopt the full set with one submodule.
 
 ## How
 
-1. Create the standalone skills repo containing the portable skills
-2. Add it as a submodule at `.agents/skills/shared/` in consuming repos
-3. Project-specific skills stay at `.agents/skills/<name>/`
-4. Contributing to shared skills happens upstream; consumers bump the ref
+Consume the shared repo as a git submodule at `.agents/skills/shared/`;
+project-specific skills stay at `.agents/skills/<name>/`. Contributions go
+upstream — consumers just bump the ref.
 
 ## Related
 
@@ -238,20 +254,19 @@ notes, benchmark data, architecture diagrams, API docs, error logs, design
 decisions, Slack threads, or raw investigation output. Treat this as the source
 of truth and fold it into the ticket properly:
 
-- **Research / investigation notes** → distill into the How/Implementation
-  section; preserve key findings, discard noise
-- **Technical data** (benchmarks, metrics, error rates) → include as a fenced
-  block or table in the relevant section; cite what it shows, not just the raw
-  numbers
-- **Architecture or design context** → use to sharpen the Acceptance Criteria
-  and inform the How section; don't just quote it back verbatim
+- **Research / investigation notes** → distill into a few orienting pointers;
+  preserve the key findings, discard the noise — don't paste the notes in
+- **Technical data** (benchmarks, metrics, error rates) → cite only the figure
+  that motivates the work or sets a target; leave the full dataset out
+- **Architecture or design context** → use it to sharpen the Acceptance Criteria
+  and drop a pointer to the relevant component; don't reproduce the design
 - **Existing ticket or thread** → extract the signal, restructure into the
   correct ticket format, add any missing mandatory sections
 
-The richer the context the user provides, the more specific and concrete the
-ticket should be. Vague input produces a lighter ticket; detailed input should
-produce a detailed ticket. Never invent specifics that aren't in the context —
-if something is unclear, leave a `[TBD]` placeholder or ask.
+Richer context lets you make the ticket more **specific and concrete** — sharper
+AC, better-targeted pointers — not longer. Use the detail to tighten the
+requirements, not to bulk up the ticket with a plan. Never invent specifics that
+aren't in the context — if something is unclear, leave a `[TBD]` placeholder or ask.
 
 ## Workflow
 
@@ -260,7 +275,8 @@ if something is unclear, leave a `[TBD]` placeholder or ask.
 3. Draft the summary line first — get the wording tight before writing the body.
 4. Fill in the sections for that type, in order, weaving in context where it belongs.
 5. Check: does every requirement in AC have a clear pass/fail condition? Is the
-   Why section present and specific? Are code examples in fenced blocks?
+   Why section present and specific? Is anything in the ticket an implementation
+   plan that should be cut to a pointer or dropped? Are code examples fenced?
 6. Present the draft for review. Don't file it yet (see **Drafting vs. filing**).
    If something essential is genuinely unclear — and you can't fill it with a
    `[TBD]` placeholder — ask before drafting rather than inventing specifics.
